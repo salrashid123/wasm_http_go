@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<title>sals' wasm-go-httpclient</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="stylesheets/main.css">
+	<script src="js/wasm_exec.js" defer></script>
+	<script src="js/wasm.js" defer></script>
+</head>
+
+<body>
+
+	<div>
+		PlainText: <input type="text" id="input" name="input">
+	</div>
+	<br />
+
+	<div>
+		Base64: <input type="text" id="output" name="output">
+	</div>
+
+	<div>
+		<button id="submit" name="submit" onclick="encodeJs(input.value)">Submit</button>
+	</div>
+
+	<br />
+	<hr />
+
+
+	<br />
+	<div>
+		URL to Fetch <input type="text" id="url" name="url" value="https://httpbin.org/get">
+	</div>
+
+	<br />
+
+	<div>
+		<button id="submit" name="submit" onclick="MyFunc(url.value)">Submit Sync</button>
+	</div>
+	<br />
+	<div>
+		<button id="submit" name="submit" onclick="MyFuncStream(url.value)">Submit Async </button>
+	</div>
+
+
+	<br />
+	<div>Output
+		<pre id="json"></pre>
+	</div>
+
+
+</body>
+<script>
+	let encodeJs = function (input) {
+		let result = base64(input);
+		if (result.error !== '') {
+			alert(result.error);
+		} else {
+			output.value = result.encoded;
+		}
+	}
+
+	async function MyFunc(url) {
+		try {
+			const response = await MyGoFunc(url)
+			const message = await response.json()
+			console.log(message)
+			document.getElementById('json').textContent = JSON.stringify(message, undefined, 2);
+
+		} catch (err) {
+			console.error('Caught exception', err)
+		}
+	}
+
+
+	async function MyFuncStream(url) {
+		try {
+			const response = await MyGoFuncStream(url)
+			const reader = response.body.getReader()
+			let done = false
+			let totalBytes = 0;
+			let output = ''
+			let strResponse =- '';
+			while (!done) {
+				const read = await reader.read()
+				done = read && read.done
+				if (read.value) {
+					const bytesString = String.fromCharCode(...read.value);
+					output = output + bytesString;
+					totalBytes = totalBytes + read.value.length;
+					console.log('Read', totalBytes, 'bytes')
+				}
+			}
+			document.getElementById('json').textContent = JSON.stringify(JSON.parse(output), undefined, 2);
+		} catch (err) {
+			console.error('Caught exception', err)
+		}
+	}
+</script>
+
+</html>
