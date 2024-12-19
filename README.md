@@ -76,6 +76,8 @@ Note that the webserver loads wasm
 	<script src="js/wasm.js" defer></script>
 ```
 
+where we got `wasm_exec.js` from [here](https://raw.githubusercontent.com/golang/go/refs/tags/go1.21.0/misc/wasm/wasm_exec.js)
+
 which inturn bootstraps the `main.wasm` file:
 
 ```javascript
